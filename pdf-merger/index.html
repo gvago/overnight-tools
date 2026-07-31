@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>איחוד קבצי PDF · הקבלות לא עוזבות את המחשב</title>
+<meta name="description" content="מאחדים כמה קבצי PDF לקובץ אחד ישירות בדפדפן. שום קובץ לא נשלח לשום שרת. בלי פרסומות, בלי הרשמה.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · macrostructure: Letter (single-column tool card) · genre: playful · theme: custom Hebrew-Hum (shared overnight-tools system)
+ * vibe: warm, friendly, trustworthy pocket tool · paper oklch(97.5% 0.012 85) · accent oklch(62% 0.19 40) warm coral
+ * fonts: Rubik (display) + Heebo (body), Hebrew-native pairing
+ * nav: none (single-purpose tool) · footer: Ft5 statement
+ * pre-emit critique: P4 H4 E4 S4 R5 V4
+ */
+:root {
+  --color-paper: oklch(97.5% 0.012 85);
+  --color-card: oklch(99.5% 0.005 85);
+  --color-ink: oklch(25% 0.02 60);
+  --color-muted: oklch(48% 0.02 60);
+  --color-accent: oklch(62% 0.19 40);
+  --color-accent-soft: oklch(94% 0.045 40);
+  --color-ok: oklch(58% 0.14 155);
+  --color-ok-soft: oklch(95% 0.04 155);
+  --color-err: oklch(55% 0.19 25);
+  --color-err-soft: oklch(95% 0.035 25);
+  --color-line: oklch(88% 0.015 75);
+  --font-display: "Rubik", "Heebo", sans-serif;
+  --font-body: "Heebo", sans-serif;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+  --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px;
+  --radius-lg: 20px; --radius-md: 14px; --radius-sm: 10px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: clip; }
+body {
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+  line-height: 1.6;
+}
+main { width: 100%; max-width: 620px; }
+header { text-align: center; margin: var(--space-xl) 0 var(--space-lg); }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.7rem, 5.5vw, 2.4rem);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+h1 .accent { color: var(--color-accent); }
+.sub {
+  color: var(--color-muted);
+  margin-top: var(--space-sm);
+  font-size: 1.02rem;
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.privacy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-top: var(--space-md);
+}
+#drop {
+  margin-top: var(--space-lg);
+  background: var(--color-card);
+  border: 2px dashed var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  box-shadow: 0 1px 3px oklch(30% 0.02 60 / 0.06);
+}
+#drop:hover, #drop.drag { border-color: var(--color-accent); background: var(--color-accent-soft); }
+#drop:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+#drop:active { transform: scale(0.995); }
+#drop .icon { font-size: 2.2rem; display: block; margin-bottom: var(--space-sm); }
+#drop .big { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+#drop p.hint { color: var(--color-muted); margin-top: var(--space-xs); font-size: 0.9rem; }
+input[type=file] { display: none; }
+#list { margin-top: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm); }
+.order-hint { display: none; color: var(--color-muted); font-size: 0.88rem; margin-top: var(--space-md); text-align: center; }
+.item {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  animation: rise 300ms var(--ease-out);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .item { animation: none; }
+  #drop, #merge, .move, .remove { transition: none; }
+}
+.item .badge {
+  width: 44px; height: 52px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.item.error .badge { background: var(--color-err-soft); color: var(--color-err); }
+.item .meta { flex: 1; min-width: 0; }
+.item .name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
+.item .status { font-size: 0.85rem; color: var(--color-muted); }
+.item .status.ok { color: var(--color-ok); font-weight: 700; }
+.item .status.err { color: var(--color-err); font-weight: 500; }
+.item.error { background: var(--color-err-soft); border-color: oklch(85% 0.06 25); }
+.item .btns { display: flex; gap: var(--space-xs); flex-shrink: 0; }
+.move, .remove {
+  width: 36px; height: 36px;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  color: var(--color-ink);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.move:hover, .remove:hover { background: var(--color-accent-soft); }
+.move:focus-visible, .remove:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.move:active, .remove:active { transform: translateY(1px); }
+.move:disabled { opacity: 0.3; cursor: default; }
+.move:disabled:hover { background: var(--color-card); }
+.remove { color: var(--color-err); }
+#merge {
+  display: none;
+  margin-top: var(--space-md);
+  width: 100%;
+  background: var(--color-accent);
+  color: oklch(99% 0.005 85);
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+#merge:hover { filter: brightness(1.08); }
+#merge:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 3px; }
+#merge:active { transform: translateY(1px); }
+#merge:disabled { filter: saturate(0.4) brightness(1.1); cursor: default; }
+#result {
+  display: none;
+  margin-top: var(--space-md);
+  background: var(--color-ok-soft);
+  border: 1px solid oklch(85% 0.06 155);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  text-align: center;
+}
+#result .done { color: var(--color-ok); font-weight: 700; }
+#result a {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  background: var(--color-ink);
+  color: var(--color-paper);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 12px 26px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+#result a:hover { filter: brightness(1.25); }
+#result a:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+#result a:active { transform: translateY(1px); }
+.how {
+  margin-top: var(--space-xl);
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+.how h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; margin-bottom: var(--space-sm); }
+.how ol { padding-inline-start: 1.3em; color: var(--color-muted); font-size: 0.95rem; display: grid; gap: 4px; }
+footer {
+  margin-top: var(--space-2xl);
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  max-width: 44ch;
+}
+footer a { color: var(--color-accent); font-weight: 500; }
+footer .built { font-family: var(--font-display); font-weight: 500; color: var(--color-ink); }
+@media (max-width: 414px) {
+  .item { flex-wrap: wrap; }
+  .item .meta { flex-basis: calc(100% - 60px); }
+  .item .btns { margin-inline-start: auto; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>איחוד קבצי <span class="accent">PDF</span> לקובץ אחד</h1>
+  <p class="sub">קבלות, חשבוניות, מסמכים. גררו לכאן כמה קבצי PDF, סדרו אותם, וקבלו קובץ אחד מסודר להנהלת חשבונות.</p>
+  <span class="privacy-chip">🔒 שום קובץ לא נשלח לשום שרת. הכל קורה אצלכם בדפדפן.</span>
+</header>
+
+<div id="drop" role="button" tabindex="0" aria-label="בחירת קבצי PDF לאיחוד">
+  <span class="icon">🧾</span>
+  <div class="big">גררו קבצי PDF לכאן, או לחצו לבחירה</div>
+  <p class="hint">אפשר כמה קבצים בבת אחת · הסדר ניתן לשינוי אחר כך</p>
+  <input type="file" id="file" multiple accept=".pdf,application/pdf">
+</div>
+
+<div id="list" aria-live="polite"></div>
+<p class="order-hint" id="orderHint">הקובץ המאוחד ייבנה לפי הסדר ברשימה. אפשר להזיז עם החצים.</p>
+<button id="merge">🪄 איחוד לקובץ PDF אחד</button>
+<div id="result" aria-live="polite">
+  <div class="done" id="resultText"></div>
+  <a id="dlMerged" download="merged.pdf">⬇️ הורדת הקובץ המאוחד</a>
+</div>
+
+<section class="how">
+  <h2>איך זה עובד?</h2>
+  <ol>
+    <li>בוחרים או גוררים את כל קבצי ה‑PDF שרוצים לאחד</li>
+    <li>מסדרים את הרשימה בעזרת החצים, ולוחצים על כפתור האיחוד</li>
+    <li>האיחוד רץ בתוך הדפדפן שלכם. אפשר אפילו לנתק אינטרנט אחרי שהדף נטען</li>
+    <li>מורידים קובץ PDF אחד עם כל העמודים, בסדר שבחרתם</li>
+  </ol>
+</section>
+
+<footer>
+  <span class="built">נבנה על ידי סוכן AI, בלילה, בזמן שגיא ישן.</span><br>
+  הקוד פתוח: <a href="https://github.com/gvago/overnight-tools">github.com/gvago/overnight-tools</a> · שום מידע לא נאסף
+</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const list = document.getElementById('list');
+const mergeBtn = document.getElementById('merge');
+const orderHint = document.getElementById('orderHint');
+const resultBox = document.getElementById('result');
+const resultText = document.getElementById('resultText');
+const dlMerged = document.getElementById('dlMerged');
+const entries = []; // { id, name, bytes, pageCount, row }
+let nextId = 1;
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+function handleFiles(files) { [...files].forEach(addFile); }
+
+async function addFile(file) {
+  const row = document.createElement('div');
+  row.className = 'item';
+  row.innerHTML = `<div class="badge">PDF</div><div class="meta"><div class="name"></div><div class="status">בודק את הקובץ…</div></div>
+  <div class="btns">
+    <button class="move up" title="הזזה למעלה" aria-label="הזזה למעלה">↑</button>
+    <button class="move down" title="הזזה למטה" aria-label="הזזה למטה">↓</button>
+    <button class="remove" title="הסרה" aria-label="הסרה מהרשימה">✕</button>
+  </div>`;
+  row.querySelector('.name').textContent = file.name;
+  list.appendChild(row);
+  const statusEl = row.querySelector('.status');
+  const entry = { id: nextId++, name: file.name, bytes: null, pageCount: 0, row };
+
+  row.querySelector('.remove').addEventListener('click', () => {
+    const i = entries.indexOf(entry);
+    if (i > -1) entries.splice(i, 1);
+    row.remove();
+    refreshUI();
+  });
+  row.querySelector('.up').addEventListener('click', () => moveEntry(entry, -1));
+  row.querySelector('.down').addEventListener('click', () => moveEntry(entry, +1));
+
+  try {
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') throw new Error('זה לא קובץ PDF. הכלי הזה מאחד רק קבצי PDF');
+    if (file.size === 0) throw new Error('הקובץ ריק');
+    const bytes = await file.arrayBuffer();
+    const head = new Uint8Array(bytes.slice(0, 5));
+    if (String.fromCharCode(...head) !== '%PDF-') throw new Error('זה לא קובץ PDF תקין');
+    let doc;
+    try {
+      doc = await PDFLib.PDFDocument.load(bytes);
+    } catch (e) {
+      if (String(e).toLowerCase().includes('encrypt')) throw new Error('הקובץ מוגן בסיסמה. צריך להסיר את הסיסמה לפני האיחוד');
+      throw new Error('לא הצלחתי לקרוא את הקובץ. ייתכן שהוא פגום');
+    }
+    entry.bytes = bytes;
+    entry.pageCount = doc.getPageCount();
+    statusEl.textContent = '✓ ' + entry.pageCount + (entry.pageCount === 1 ? ' עמוד' : ' עמודים') + ' · ' + (file.size/1024).toFixed(0) + ' KB';
+    statusEl.classList.add('ok');
+    entries.push(entry);
+    refreshUI();
+  } catch (err) {
+    row.classList.add('error');
+    row.querySelector('.badge').textContent = '!';
+    row.querySelector('.up').remove();
+    row.querySelector('.down').remove();
+    statusEl.textContent = err.message || 'שגיאה בקריאת הקובץ';
+    statusEl.classList.add('err');
+  }
+}
+
+function moveEntry(entry, dir) {
+  const i = entries.indexOf(entry);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= entries.length) return;
+  [entries[i], entries[j]] = [entries[j], entries[i]];
+  const rows = entries.map(e => e.row);
+  rows.forEach(r => list.appendChild(r));
+  refreshUI();
+}
+
+function refreshUI() {
+  entries.forEach((e, i) => {
+    const up = e.row.querySelector('.up');
+    const down = e.row.querySelector('.down');
+    if (up) up.disabled = (i === 0);
+    if (down) down.disabled = (i === entries.length - 1);
+  });
+  const show = entries.length >= 2;
+  mergeBtn.style.display = show ? 'block' : 'none';
+  orderHint.style.display = show ? 'block' : 'none';
+  resultBox.style.display = 'none';
+}
+
+mergeBtn.addEventListener('click', async () => {
+  if (entries.length < 2) return;
+  mergeBtn.disabled = true;
+  mergeBtn.textContent = 'מאחד את הקבצים…';
+  try {
+    const merged = await PDFLib.PDFDocument.create();
+    for (const entry of entries) {
+      const src = await PDFLib.PDFDocument.load(entry.bytes);
+      const pages = await merged.copyPages(src, src.getPageIndices());
+      pages.forEach(p => merged.addPage(p));
+    }
+    const outBytes = await merged.save();
+    const blob = new Blob([outBytes], { type: 'application/pdf' });
+    const total = merged.getPageCount();
+    dlMerged.href = URL.createObjectURL(blob);
+    dlMerged.download = 'merged-' + new Date().toISOString().slice(0, 10) + '.pdf';
+    resultText.textContent = '✓ מוכן! קובץ אחד עם ' + total + ' עמודים (' + (blob.size/1024).toFixed(0) + ' KB)';
+    resultBox.style.display = 'block';
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (err) {
+    resultText.textContent = 'האיחוד נכשל: ' + (err.message || err) + '. נסו שוב או כתבו לנו בתגובות';
+    resultBox.style.display = 'block';
+    dlMerged.removeAttribute('href');
+  }
+  mergeBtn.disabled = false;
+  mergeBtn.textContent = '🪄 איחוד לקובץ PDF אחד';
+});
+</script>
+</body>
+</html>
