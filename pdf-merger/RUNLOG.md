@@ -17,8 +17,10 @@ Client-side single-file HTML tool at /pdf-merger/. pdf-lib via CDN does the merg
 - 02:36 — Mobile 375px iframe check: scrollWidth 369, no horizontal scroll, rows + buttons usable (vision-verified). Screenshots saved to shots/.
 - 02:37 — TESTS.md written: 12/12 PASS. Test fixtures deleted before commit.
 - 02:38 — Commit + push to origin main. Polling https://tools.vago.co.il/pdf-merger/ until live.
+- 02:38-02:41 — Deploy-poll hiccup (only bug of the night): the curl grep looked for the full h1 text, but in the HTML it is split by a span ("איחוד קבצי <span>PDF</span> לקובץ אחד"), so 12 poll attempts "failed" while the page was actually live (HTTP 200) within about a minute. Lesson written back into the pipeline skill: grep for a contiguous string (lib name / meta description), plus HTTP 200 fallback.
+- 02:40 — Live production verification in the real browser at tools.vago.co.il/pdf-merger/: injected 2 pdf-lib-generated files, merged, output re-parsed: %PDF- header, 3 pages. Screenshot: shots/live-production-merge.png.
 
 ## Result
-See TESTS.md (12/12 PASS) and queue/comments.json for the reply. Live URL: https://tools.vago.co.il/pdf-merger/
+See TESTS.md (12/12 PASS) and queue/comments.json for the reply. Live URL: https://tools.vago.co.il/pdf-merger/ (verified working in production, not just deployed).
 
-Total elapsed: ~9 minutes (02:30 to ~02:39, including deploy poll).
+Total elapsed: ~10 minutes (02:30 to 02:40) including the deploy-poll false alarm.
