@@ -3,116 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ממיר HEIC ל-JPG — בלי להעלות לשום מקום</title>
+<title>ממיר HEIC ל-JPG · התמונות לא עוזבות את המחשב</title>
+<meta name="description" content="ממירים תמונות HEIC מהאייפון ל-JPG ישירות בדפדפן. שום קובץ לא נשלח לשום שרת.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f1115;
-    --card: #191c23;
-    --accent: #4f9cf9;
-    --accent-hover: #6db0ff;
-    --text: #e8eaf0;
-    --muted: #9aa3b2;
-    --ok: #3dd68c;
-    --err: #f06a6a;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, "Segoe UI", Roboto, "Heebo", Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 16px 60px;
-  }
-  header { text-align: center; margin: 24px 0 8px; max-width: 640px; }
-  h1 { font-size: 1.6rem; margin-bottom: 8px; }
-  .privacy {
-    color: var(--muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
-  }
-  .privacy b { color: var(--ok); }
-  #drop {
-    margin-top: 28px;
-    width: 100%;
-    max-width: 640px;
-    border: 2px dashed #3a4150;
-    border-radius: 16px;
-    background: var(--card);
-    padding: 48px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .15s, background .15s;
-  }
-  #drop.drag { border-color: var(--accent); background: #1d2330; }
-  #drop p { color: var(--muted); margin-top: 8px; font-size: 0.9rem; }
-  #drop .big { font-size: 1.15rem; color: var(--text); }
-  input[type=file] { display: none; }
-  #list { width: 100%; max-width: 640px; margin-top: 20px; }
-  .item {
-    background: var(--card);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .item img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background:#000; }
-  .item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
-  .item .status { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
-  .item .status.ok { color: var(--ok); }
-  .item .status.err { color: var(--err); }
-  .item a.dl {
-    background: var(--accent);
-    color: #fff;
-    text-decoration: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    white-space: nowrap;
-  }
-  .item a.dl:hover { background: var(--accent-hover); }
-  #dlAll {
-    display: none;
-    margin-top: 12px;
-    background: var(--ok);
-    color: #08130d;
-    border: none;
-    font-weight: 700;
-    padding: 14px 28px;
-    border-radius: 10px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  #dlAll:hover { filter: brightness(1.1); }
-  footer { margin-top: auto; padding-top: 40px; color: var(--muted); font-size: 0.8rem; text-align: center; }
-  footer a { color: var(--accent); }
+/* Hallmark · macrostructure: Letter (single-column tool card) · genre: playful · theme: custom Hebrew-Hum
+ * vibe: warm, friendly, trustworthy pocket tool · paper oklch(97.5% 0.012 85) · accent oklch(62% 0.19 40) warm coral
+ * fonts: Rubik (display) + Heebo (body), Hebrew-native pairing
+ * nav: none (single-purpose tool) · footer: Ft5 statement
+ * pre-emit critique: P4 H4 E4 S4 R5 V4
+ */
+:root {
+  --color-paper: oklch(97.5% 0.012 85);
+  --color-card: oklch(99.5% 0.005 85);
+  --color-ink: oklch(25% 0.02 60);
+  --color-muted: oklch(48% 0.02 60);
+  --color-accent: oklch(62% 0.19 40);
+  --color-accent-soft: oklch(94% 0.045 40);
+  --color-ok: oklch(58% 0.14 155);
+  --color-ok-soft: oklch(95% 0.04 155);
+  --color-err: oklch(55% 0.19 25);
+  --color-err-soft: oklch(95% 0.035 25);
+  --color-line: oklch(88% 0.015 75);
+  --font-display: "Rubik", "Heebo", sans-serif;
+  --font-body: "Heebo", sans-serif;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+  --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px;
+  --radius-lg: 20px; --radius-md: 14px; --radius-sm: 10px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: clip; }
+body {
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+  line-height: 1.6;
+}
+main { width: 100%; max-width: 620px; }
+header { text-align: center; margin: var(--space-xl) 0 var(--space-lg); }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.7rem, 5.5vw, 2.4rem);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+h1 .accent { color: var(--color-accent); }
+.sub {
+  color: var(--color-muted);
+  margin-top: var(--space-sm);
+  font-size: 1.02rem;
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.privacy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-top: var(--space-md);
+}
+#drop {
+  margin-top: var(--space-lg);
+  background: var(--color-card);
+  border: 2px dashed var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  box-shadow: 0 1px 3px oklch(30% 0.02 60 / 0.06);
+}
+#drop:hover, #drop.drag { border-color: var(--color-accent); background: var(--color-accent-soft); }
+#drop:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+#drop:active { transform: scale(0.995); }
+#drop .icon { font-size: 2.2rem; display: block; margin-bottom: var(--space-sm); }
+#drop .big { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+#drop p.hint { color: var(--color-muted); margin-top: var(--space-xs); font-size: 0.9rem; }
+input[type=file] { display: none; }
+#list { margin-top: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm); }
+.item {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  animation: rise 300ms var(--ease-out);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .item { animation: none; }
+  #drop, .dl, #dlAll { transition: none; }
+}
+.item img { width: 52px; height: 52px; object-fit: cover; border-radius: var(--radius-sm); background: var(--color-paper); flex-shrink: 0; }
+.item .meta { flex: 1; min-width: 0; }
+.item .name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
+.item .status { font-size: 0.85rem; color: var(--color-muted); }
+.item .status.ok { color: var(--color-ok); font-weight: 700; }
+.item .status.err { color: var(--color-err); font-weight: 500; }
+.item.error { background: var(--color-err-soft); border-color: oklch(85% 0.06 25); }
+a.dl {
+  background: var(--color-accent);
+  color: oklch(99% 0.005 85);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+a.dl:hover { filter: brightness(1.08); }
+a.dl:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 2px; }
+a.dl:active { transform: translateY(1px); }
+#dlAll {
+  display: none;
+  margin-top: var(--space-md);
+  width: 100%;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+#dlAll:hover { filter: brightness(1.25); }
+#dlAll:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+#dlAll:active { transform: translateY(1px); }
+.how {
+  margin-top: var(--space-xl);
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+.how h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; margin-bottom: var(--space-sm); }
+.how ol { padding-inline-start: 1.3em; color: var(--color-muted); font-size: 0.95rem; display: grid; gap: 4px; }
+footer {
+  margin-top: var(--space-2xl);
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  max-width: 44ch;
+}
+footer a { color: var(--color-accent); font-weight: 500; }
+footer .built { font-family: var(--font-display); font-weight: 500; color: var(--color-ink); }
+@media (max-width: 414px) {
+  .item { flex-wrap: wrap; }
+  .item .meta { flex-basis: calc(100% - 68px); }
+  a.dl { margin-inline-start: auto; }
+}
 </style>
 </head>
 <body>
+<main>
 <header>
-  <h1>📷 ממיר HEIC ל‑JPG</h1>
-  <div class="privacy">
-    גררו לכאן תמונות HEIC מהאייפון וקבלו JPG שנפתח בכל מקום.<br>
-    <b>הכל קורה בדפדפן שלכם.</b> התמונות לא נשלחות לשום שרת — אפשר אפילו לנתק אינטרנט אחרי שהדף נטען.
-  </div>
+  <h1>ממיר <span class="accent">HEIC</span> ל‑JPG</h1>
+  <p class="sub">תמונות מהאייפון שלא נפתחות אצל אף אחד? גררו אותן לכאן וקבלו JPG שנפתח בכל מקום.</p>
+  <span class="privacy-chip">🔒 שום תמונה לא נשלחת לשום שרת. הכל קורה אצלכם בדפדפן.</span>
 </header>
 
-<div id="drop">
+<div id="drop" role="button" tabindex="0" aria-label="בחירת קבצי HEIC להמרה">
+  <span class="icon">📷</span>
   <div class="big">גררו קבצים לכאן, או לחצו לבחירה</div>
-  <p>אפשר כמה קבצים בבת אחת · HEIC / HEIF</p>
+  <p class="hint">אפשר כמה קבצים בבת אחת · HEIC / HEIF</p>
   <input type="file" id="file" multiple accept=".heic,.heif,image/heic,image/heif">
 </div>
 
-<div id="list"></div>
-<button id="dlAll">⬇️ הורדת הכל (ZIP)</button>
+<div id="list" aria-live="polite"></div>
+<button id="dlAll">⬇️ הורדת הכל כקובץ ZIP</button>
+
+<section class="how">
+  <h2>איך זה עובד?</h2>
+  <ol>
+    <li>בוחרים או גוררים תמונות HEIC מהאייפון</li>
+    <li>ההמרה רצה בתוך הדפדפן שלכם. אפשר אפילו לנתק אינטרנט אחרי שהדף נטען</li>
+    <li>מורידים JPG אחד אחד, או הכל ביחד כ‑ZIP</li>
+  </ol>
+</section>
 
 <footer>
-  נבנה על ידי סוכן AI · הקוד פתוח · שום מידע לא נאסף
+  <span class="built">נבנה על ידי סוכן AI, בלילה, בזמן שגיא ישן.</span><br>
+  הקוד פתוח: <a href="https://github.com/gvago/overnight-tools">github.com/gvago/overnight-tools</a> · שום מידע לא נאסף
 </footer>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -124,46 +221,49 @@ const dlAll = document.getElementById('dlAll');
 const results = [];
 
 drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
 drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
 drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
 drop.addEventListener('drop', e => {
   e.preventDefault(); drop.classList.remove('drag');
   handleFiles(e.dataTransfer.files);
 });
-fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
 
-function handleFiles(files) {
-  [...files].forEach(convert);
-}
+function handleFiles(files) { [...files].forEach(convert); }
 
 async function convert(file) {
   const row = document.createElement('div');
   row.className = 'item';
-  row.innerHTML = `<img alt=""><div class="name">${file.name}</div><div class="status">ממיר…</div>`;
+  row.innerHTML = `<img alt=""><div class="meta"><div class="name"></div><div class="status">ממיר… זה יכול לקחת כמה שניות</div></div>`;
+  row.querySelector('.name').textContent = file.name;
   list.appendChild(row);
   const statusEl = row.querySelector('.status');
   try {
-    if (!/\.(heic|heif)$/i.test(file.name)) throw new Error('לא קובץ HEIC');
+    if (!/\.(heic|heif)$/i.test(file.name)) throw new Error('זה לא קובץ HEIC. הכלי הזה ממיר רק תמונות HEIC/HEIF מהאייפון');
+    if (file.size === 0) throw new Error('הקובץ ריק');
     const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
     const jpg = Array.isArray(blob) ? blob[0] : blob;
     const outName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
     const url = URL.createObjectURL(jpg);
     row.querySelector('img').src = url;
-    statusEl.textContent = (jpg.size/1024/1024).toFixed(1) + ' MB';
+    statusEl.textContent = '✓ מוכן · ' + (jpg.size/1024/1024).toFixed(1) + ' MB';
     statusEl.classList.add('ok');
     const a = document.createElement('a');
     a.className = 'dl'; a.href = url; a.download = outName; a.textContent = 'הורדה';
     row.appendChild(a);
     results.push({ name: outName, blob: jpg });
-    if (results.length >= 2) dlAll.style.display = 'inline-block';
+    if (results.length >= 2) dlAll.style.display = 'block';
   } catch (err) {
-    statusEl.textContent = 'שגיאה: ' + (err.message || 'המרה נכשלה');
+    row.classList.add('error');
+    statusEl.textContent = err.message && /HEIC|ריק/.test(err.message) ? err.message : 'ההמרה נכשלה. נסו קובץ אחר, או צרו קשר בתגובות';
     statusEl.classList.add('err');
   }
 }
 
 dlAll.addEventListener('click', async () => {
-  dlAll.textContent = 'אורז…';
+  dlAll.disabled = true;
+  dlAll.textContent = 'אורז את הקבצים…';
   const zip = new JSZip();
   results.forEach(r => zip.file(r.name, r.blob));
   const blob = await zip.generateAsync({ type: 'blob' });
@@ -171,7 +271,8 @@ dlAll.addEventListener('click', async () => {
   a.href = URL.createObjectURL(blob);
   a.download = 'converted-photos.zip';
   a.click();
-  dlAll.textContent = '⬇️ הורדת הכל (ZIP)';
+  dlAll.disabled = false;
+  dlAll.textContent = '⬇️ הורדת הכל כקובץ ZIP';
 });
 </script>
 </body>
