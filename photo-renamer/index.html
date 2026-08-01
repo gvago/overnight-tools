@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שינוי שם לתמונות סרוקות לפי תאריך הצילום · הכל בדפדפן</title>
+<meta name="description" content="נותנים לתמונות סרוקות שמות לפי תאריך הצילום מתוך ה-EXIF, למשל 2003-07-14_001.jpg. הכל בדפדפן, שום קובץ לא נשלח לשום שרת.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · macrostructure: Letter (single-column tool card) · genre: playful · theme: overnight-tools shared system
+ * vibe: warm, friendly, trustworthy pocket tool · paper oklch(97.5% 0.012 85) · accent oklch(62% 0.19 40) warm coral
+ * fonts: Rubik (display) + Heebo (body), Hebrew-native pairing
+ * nav: none (single-purpose tool) · footer: Ft5 statement
+ * pre-emit critique: P4 H4 E4 S4 R5 V4
+ */
+:root {
+  --color-paper: oklch(97.5% 0.012 85);
+  --color-card: oklch(99.5% 0.005 85);
+  --color-ink: oklch(25% 0.02 60);
+  --color-muted: oklch(48% 0.02 60);
+  --color-accent: oklch(62% 0.19 40);
+  --color-accent-soft: oklch(94% 0.045 40);
+  --color-ok: oklch(58% 0.14 155);
+  --color-ok-soft: oklch(95% 0.04 155);
+  --color-err: oklch(55% 0.19 25);
+  --color-err-soft: oklch(95% 0.035 25);
+  --color-warn: oklch(60% 0.13 75);
+  --color-warn-soft: oklch(96% 0.045 85);
+  --color-line: oklch(88% 0.015 75);
+  --font-display: "Rubik", "Heebo", sans-serif;
+  --font-body: "Heebo", sans-serif;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+  --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px;
+  --radius-lg: 20px; --radius-md: 14px; --radius-sm: 10px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: clip; }
+body {
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+  line-height: 1.6;
+}
+main { width: 100%; max-width: 640px; }
+header { text-align: center; margin: var(--space-xl) 0 var(--space-lg); }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.7rem, 5.5vw, 2.4rem);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+h1 .accent { color: var(--color-accent); }
+.sub {
+  color: var(--color-muted);
+  margin-top: var(--space-sm);
+  font-size: 1.02rem;
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.privacy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-top: var(--space-md);
+}
+#drop {
+  margin-top: var(--space-lg);
+  background: var(--color-card);
+  border: 2px dashed var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  box-shadow: 0 1px 3px oklch(30% 0.02 60 / 0.06);
+}
+#drop:hover, #drop.drag { border-color: var(--color-accent); background: var(--color-accent-soft); }
+#drop:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+#drop:active { transform: scale(0.995); }
+#drop .icon { font-size: 2.2rem; display: block; margin-bottom: var(--space-sm); }
+#drop .big { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+#drop p.hint { color: var(--color-muted); margin-top: var(--space-xs); font-size: 0.9rem; }
+input[type=file] { display: none; }
+#summary {
+  display: none;
+  margin-top: var(--space-md);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+#summary.has-fallback { background: var(--color-warn-soft); color: var(--color-warn); }
+#list { margin-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
+.item {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  animation: rise 300ms var(--ease-out);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .item { animation: none; }
+  #drop, #dlAll { transition: none; }
+}
+.item img { width: 52px; height: 52px; object-fit: cover; border-radius: var(--radius-sm); background: var(--color-paper); flex-shrink: 0; }
+.item .meta { flex: 1; min-width: 0; }
+.item .name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; color: var(--color-muted); direction: ltr; text-align: right; }
+.item .newname { font-family: var(--font-display); font-weight: 700; font-size: 1rem; direction: ltr; text-align: right; }
+.item .status { font-size: 0.83rem; color: var(--color-muted); }
+.item .status.exif { color: var(--color-ok); font-weight: 700; }
+.item .status.fallback { color: var(--color-warn); font-weight: 700; }
+.item .status.err { color: var(--color-err); font-weight: 500; }
+.item.error { background: var(--color-err-soft); border-color: oklch(85% 0.06 25); }
+#dlAll {
+  display: none;
+  margin-top: var(--space-md);
+  width: 100%;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+#dlAll:hover { filter: brightness(1.25); }
+#dlAll:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+#dlAll:active { transform: translateY(1px); }
+.how {
+  margin-top: var(--space-xl);
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+.how h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; margin-bottom: var(--space-sm); }
+.how ol { padding-inline-start: 1.3em; color: var(--color-muted); font-size: 0.95rem; display: grid; gap: 4px; }
+footer {
+  margin-top: var(--space-2xl);
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  max-width: 44ch;
+}
+footer a { color: var(--color-accent); font-weight: 500; }
+footer .built { font-family: var(--font-display); font-weight: 500; color: var(--color-ink); }
+@media (max-width: 414px) {
+  .item { flex-wrap: wrap; }
+  .item .meta { flex-basis: calc(100% - 68px); }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>שמות לתמונות לפי <span class="accent">תאריך הצילום</span></h1>
+  <p class="sub">סרקתם אלבום ישן וקיבלתם scan0001.jpg? גררו את הקבצים לכאן וקבלו אותם עם שמות כמו 2003-07-14_001.jpg, לפי התאריך האמיתי מתוך המידע של התמונה (EXIF).</p>
+  <span class="privacy-chip">🔒 שום תמונה לא נשלחת לשום שרת. הכל קורה אצלכם בדפדפן.</span>
+</header>
+
+<div id="drop" role="button" tabindex="0" aria-label="בחירת תמונות לשינוי שם">
+  <span class="icon">🗂️</span>
+  <div class="big">גררו תמונות לכאן, או לחצו לבחירה</div>
+  <p class="hint">אפשר מאות קבצים בבת אחת · JPG / JPEG / TIFF</p>
+  <input type="file" id="file" multiple accept=".jpg,.jpeg,.tif,.tiff,image/jpeg,image/tiff">
+</div>
+
+<div id="summary" role="status"></div>
+<div id="list" aria-live="polite"></div>
+<button id="dlAll">⬇️ הורדת כל התמונות עם השמות החדשים (ZIP)</button>
+
+<section class="how">
+  <h2>איך זה עובד?</h2>
+  <ol>
+    <li>גוררים את כל הסריקות (אפשר מאות קבצים ביחד)</li>
+    <li>הכלי קורא את תאריך הצילום מתוך המידע הפנימי של כל תמונה (EXIF) ומציע שם חדש: תאריך ומספר רץ. לתמונות בלי תאריך צילום נשתמש בתאריך הקובץ עצמו, ותראו סימון ברור ליד כל תמונה כזאת</li>
+    <li>לוחצים על כפתור ההורדה ומקבלים ZIP עם כל התמונות בשמות החדשים. התמונות עצמן לא משתנות, רק השם</li>
+  </ol>
+</section>
+
+<footer>
+  <span class="built">נבנה על ידי סוכן AI, בלילה, בזמן שגיא ישן.</span><br>
+  הקוד פתוח: <a href="https://github.com/gvago/overnight-tools">github.com/gvago/overnight-tools</a> · שום מידע לא נאסף
+</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/lite.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const list = document.getElementById('list');
+const summary = document.getElementById('summary');
+const dlAll = document.getElementById('dlAll');
+let entries = []; // { file, date, source: 'exif'|'mtime'|'error', newName }
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+const pad = (n, w) => String(n).padStart(w, '0');
+const dateStr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1, 2) + '-' + pad(d.getDate(), 2);
+
+async function handleFiles(files) {
+  const batch = [...files];
+  if (!batch.length) return;
+  entries = []; list.innerHTML = ''; summary.style.display = 'none'; dlAll.style.display = 'none';
+  summary.className = ''; summary.style.display = 'block';
+  summary.textContent = 'קורא תאריכי צילום מ-' + batch.length + ' קבצים…';
+  for (const file of batch) {
+    const entry = { file, date: null, source: 'error', err: null };
+    if (!/\.(jpe?g|tiff?)$/i.test(file.name)) {
+      entry.err = 'זה לא קובץ תמונה נתמך (JPG או TIFF). הקובץ ידולג';
+    } else if (file.size === 0) {
+      entry.err = 'הקובץ ריק. הקובץ ידולג';
+    } else {
+      try {
+        // NOTE: do not use the { pick: [...] } option here. In exifr's lite build it
+        // throws "undefined is not iterable" and every file would silently fall back
+        // to mtime (caught during the dry run B test gate). Plain parse works.
+        const exif = await exifr.parse(file);
+        const d = exif && (exif.DateTimeOriginal || exif.CreateDate || exif.ModifyDate);
+        if (d instanceof Date && !isNaN(d)) {
+          entry.date = d; entry.source = 'exif';
+        } else {
+          entry.date = new Date(file.lastModified); entry.source = 'mtime';
+        }
+      } catch (e) {
+        // unparseable as image with EXIF: if extension said jpg but bytes are garbage, exifr throws
+        const head = new Uint8Array(await file.slice(0, 3).arrayBuffer());
+        if (head[0] === 0xFF && head[1] === 0xD8) {
+          entry.date = new Date(file.lastModified); entry.source = 'mtime';
+        } else {
+          entry.err = 'הקובץ לא נראה כמו תמונה תקינה. הקובץ ידולג';
+        }
+      }
+    }
+    entries.push(entry);
+  }
+  // Sort valid entries chronologically, then assign NNN per date
+  const valid = entries.filter(e => !e.err).sort((a, b) => a.date - b.date || a.file.name.localeCompare(b.file.name));
+  const counters = {};
+  for (const e of valid) {
+    const ds = dateStr(e.date);
+    counters[ds] = (counters[ds] || 0) + 1;
+    const ext = (e.file.name.match(/\.[^.]+$/) || ['.jpg'])[0].toLowerCase();
+    e.newName = ds + '_' + pad(counters[ds], 3) + ext;
+  }
+  render(valid);
+}
+
+function render(valid) {
+  list.innerHTML = '';
+  const failed = entries.filter(e => e.err);
+  const fallbacks = valid.filter(e => e.source === 'mtime').length;
+  for (const e of valid.concat(failed)) {
+    const row = document.createElement('div');
+    row.className = 'item' + (e.err ? ' error' : '');
+    const img = document.createElement('img'); img.alt = '';
+    if (!e.err && /\.jpe?g$/i.test(e.file.name)) img.src = URL.createObjectURL(e.file);
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const oldName = document.createElement('div'); oldName.className = 'name'; oldName.textContent = e.file.name;
+    meta.appendChild(oldName);
+    if (e.err) {
+      const st = document.createElement('div'); st.className = 'status err'; st.textContent = e.err;
+      meta.appendChild(st);
+    } else {
+      const nn = document.createElement('div'); nn.className = 'newname'; nn.textContent = '← ' + e.newName;
+      const st = document.createElement('div');
+      if (e.source === 'exif') { st.className = 'status exif'; st.textContent = '✓ תאריך צילום מתוך EXIF'; }
+      else { st.className = 'status fallback'; st.textContent = '⚠️ אין תאריך צילום בקובץ, השתמשנו בתאריך הקובץ עצמו'; }
+      meta.appendChild(nn); meta.appendChild(st);
+    }
+    row.appendChild(img); row.appendChild(meta);
+    list.appendChild(row);
+  }
+  if (valid.length) {
+    summary.style.display = 'block';
+    summary.className = fallbacks ? 'has-fallback' : '';
+    summary.textContent = '✓ ' + valid.length + ' תמונות מוכנות לשינוי שם' +
+      (fallbacks ? ' · ל-' + fallbacks + ' מהן אין תאריך צילום ב-EXIF, השתמשנו בתאריך הקובץ (מסומנות למטה)' : '') +
+      (failed.length ? ' · ' + failed.length + ' קבצים דולגו (מסומנים באדום)' : '');
+    dlAll.style.display = 'block';
+  } else {
+    summary.style.display = 'block';
+    summary.className = 'has-fallback';
+    summary.textContent = failed.length ? 'אף קובץ לא תקין. בדקו שהקבצים הם תמונות JPG או TIFF' : 'לא נבחרו קבצים';
+    dlAll.style.display = 'none';
+  }
+  // Expose for automated verification
+  window.__pr = {
+    valid: valid.map(e => ({ old: e.file.name, newName: e.newName, source: e.source, date: e.date.toISOString() })),
+    failed: failed.map(e => ({ old: e.file.name, err: e.err }))
+  };
+}
+
+dlAll.addEventListener('click', async () => {
+  dlAll.disabled = true;
+  dlAll.textContent = 'אורז את הקבצים…';
+  try {
+    const zip = new JSZip();
+    for (const e of entries.filter(x => !x.err)) zip.file(e.newName, e.file);
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'renamed-photos.zip';
+    a.click();
+    window.__lastZipUrl = a.href; // for automated verification
+  } finally {
+    dlAll.disabled = false;
+    dlAll.textContent = '⬇️ הורדת כל התמונות עם השמות החדשים (ZIP)';
+  }
+});
+</script>
+</body>
+</html>
