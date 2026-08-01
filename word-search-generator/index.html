@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחולל תפזורות באנגלית · להדפסה, בחינם, בלי הרשמה</title>
+<meta name="description" content="מדביקים רשימת מילים באנגלית ומקבלים תפזורת (word search) מוכנה להדפסה. הכל בדפדפן, שום מידע לא נשלח לשום שרת.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · macrostructure: Letter (single-column tool card) · genre: playful · theme: overnight-tools shared system
+ * vibe: warm, friendly, trustworthy pocket tool · paper oklch(97.5% 0.012 85) · accent oklch(62% 0.19 40) warm coral
+ * fonts: Rubik (display) + Heebo (body), Hebrew-native pairing
+ * nav: none (single-purpose tool) · footer: Ft5 statement · print stylesheet = the actual product
+ * pre-emit critique: P4 H4 E4 S4 R5 V4
+ */
+:root {
+  --color-paper: oklch(97.5% 0.012 85);
+  --color-card: oklch(99.5% 0.005 85);
+  --color-ink: oklch(25% 0.02 60);
+  --color-muted: oklch(48% 0.02 60);
+  --color-accent: oklch(62% 0.19 40);
+  --color-accent-soft: oklch(94% 0.045 40);
+  --color-ok: oklch(58% 0.14 155);
+  --color-ok-soft: oklch(95% 0.04 155);
+  --color-err: oklch(55% 0.19 25);
+  --color-err-soft: oklch(95% 0.035 25);
+  --color-line: oklch(88% 0.015 75);
+  --font-display: "Rubik", "Heebo", sans-serif;
+  --font-body: "Heebo", sans-serif;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+  --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px;
+  --radius-lg: 20px; --radius-md: 14px; --radius-sm: 10px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: clip; }
+body {
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+  line-height: 1.6;
+}
+main { width: 100%; max-width: 680px; }
+header { text-align: center; margin: var(--space-xl) 0 var(--space-lg); }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.7rem, 5.5vw, 2.4rem);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+h1 .accent { color: var(--color-accent); }
+.sub {
+  color: var(--color-muted);
+  margin-top: var(--space-sm);
+  font-size: 1.02rem;
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.privacy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-top: var(--space-md);
+}
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-top: var(--space-lg);
+  box-shadow: 0 1px 3px oklch(30% 0.02 60 / 0.06);
+}
+label.field-label { font-family: var(--font-display); font-weight: 700; font-size: 0.98rem; display: block; margin-bottom: var(--space-sm); }
+textarea {
+  width: 100%;
+  min-height: 130px;
+  border: 2px dashed var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  resize: vertical;
+  direction: ltr;
+  text-align: left;
+}
+textarea:focus-visible, input[type=text]:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; border-color: var(--color-accent); }
+.hint { color: var(--color-muted); font-size: 0.88rem; margin-top: var(--space-xs); }
+.opts { display: flex; flex-wrap: wrap; gap: var(--space-md) var(--space-lg); margin-top: var(--space-md); align-items: center; }
+.opt { display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; cursor: pointer; }
+.opt input { width: 18px; height: 18px; accent-color: var(--color-accent); cursor: pointer; }
+input[type=text] {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  width: 100%;
+  margin-bottom: var(--space-md);
+}
+#gen {
+  margin-top: var(--space-lg);
+  width: 100%;
+  background: var(--color-accent);
+  color: oklch(99% 0.005 85);
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+#gen:hover { filter: brightness(1.08); }
+#gen:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 3px; }
+#gen:active { transform: translateY(1px); }
+#msg { margin-top: var(--space-md); font-size: 0.95rem; display: none; padding: 12px 16px; border-radius: var(--radius-sm); }
+#msg.err { display: block; background: var(--color-err-soft); color: var(--color-err); font-weight: 500; }
+#msg.ok { display: block; background: var(--color-ok-soft); color: var(--color-ok); font-weight: 700; }
+#out { display: none; }
+#sheet { direction: ltr; text-align: center; }
+#sheetTitle { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; margin-bottom: var(--space-md); color: var(--color-ink); }
+#gridWrap { display: flex; justify-content: center; overflow-x: auto; }
+table.grid { border-collapse: collapse; margin-inline: auto; }
+table.grid td {
+  width: 30px; height: 30px;
+  border: 1px solid var(--color-line);
+  text-align: center;
+  vertical-align: middle;
+  font-family: "Rubik", monospace;
+  font-weight: 500;
+  font-size: 1rem;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+body.show-key td.key { background: var(--color-accent-soft); box-shadow: inset 0 0 0 2px var(--color-accent); border-radius: 4px; }
+#wordBank { margin-top: var(--space-lg); display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; }
+#wordBank span {
+  font-family: "Rubik", sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 4px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-paper);
+}
+.actions { display: flex; gap: var(--space-md); margin-top: var(--space-lg); flex-wrap: wrap; }
+#printBtn {
+  flex: 1;
+  min-width: 180px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+#printBtn:hover { filter: brightness(1.25); }
+#printBtn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+#printBtn:active { transform: translateY(1px); }
+.opt.keyOpt { padding: 10px 4px; }
+.how h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; margin-bottom: var(--space-sm); }
+.how ol { padding-inline-start: 1.3em; color: var(--color-muted); font-size: 0.95rem; display: grid; gap: 4px; }
+footer {
+  margin-top: var(--space-2xl);
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  max-width: 44ch;
+}
+footer a { color: var(--color-accent); font-weight: 500; }
+footer .built { font-family: var(--font-display); font-weight: 500; color: var(--color-ink); }
+@media (prefers-reduced-motion: reduce) {
+  #gen, #printBtn { transition: none; }
+}
+@media (max-width: 414px) {
+  table.grid td { width: 22px; height: 22px; font-size: 0.82rem; }
+  .opts { gap: var(--space-sm) var(--space-md); }
+}
+@media print {
+  body { background: white; padding: 0; display: block; }
+  header, .card.input-card, .actions, .how, footer, #msg, .privacy-chip { display: none !important; }
+  #out { display: block !important; border: none; box-shadow: none; margin: 0; padding: 0; }
+  #sheet { color: black; }
+  #sheetTitle { color: black; }
+  table.grid td { border-color: #999; color: black; width: 34px; height: 34px; font-size: 1.05rem; }
+  body.show-key td.key { background: #eee !important; box-shadow: inset 0 0 0 2px black; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #wordBank span { border-color: #999; color: black; background: white; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>מחולל <span class="accent">תפזורות</span> באנגלית</h1>
+  <p class="sub">מדביקים רשימת מילים, לוחצים כפתור, מדפיסים דף עבודה. במקום שעה של סידור אותיות ביד.</p>
+  <span class="privacy-chip">🔒 שום מידע לא נשלח לשום שרת. הכל קורה אצלכם בדפדפן.</span>
+</header>
+
+<section class="card input-card">
+  <label class="field-label" for="title">כותרת לדף (לא חובה)</label>
+  <input type="text" id="title" placeholder="למשל: Unit 3 Vocabulary" dir="ltr">
+  <label class="field-label" for="words">רשימת המילים (באנגלית, מילה בכל שורה או מופרדות בפסיק)</label>
+  <textarea id="words" placeholder="apple
+banana
+teacher
+school"></textarea>
+  <p class="hint">עד 30 מילים, כל מילה עד 18 אותיות. הגודל של הטבלה נקבע אוטומטית.</p>
+  <div class="opts">
+    <label class="opt"><input type="checkbox" id="diag" checked> גם באלכסון</label>
+    <label class="opt"><input type="checkbox" id="rev"> גם הפוך (מאתגר יותר)</label>
+  </div>
+  <button id="gen">🧩 יצירת תפזורת</button>
+  <div id="msg" role="alert"></div>
+</section>
+
+<section class="card" id="out" aria-live="polite">
+  <div id="sheet">
+    <div id="sheetTitle"></div>
+    <div id="gridWrap"><table class="grid" id="grid"></table></div>
+    <div id="wordBank"></div>
+  </div>
+  <div class="actions">
+    <button id="printBtn">🖨️ הדפסה</button>
+    <label class="opt keyOpt"><input type="checkbox" id="showKey"> הצגת פתרון (למורה)</label>
+  </div>
+</section>
+
+<section class="card how">
+  <h2>איך זה עובד?</h2>
+  <ol>
+    <li>מדביקים את רשימת המילים של השבוע (באנגלית)</li>
+    <li>לוחצים על יצירת תפזורת. לא מרוצים מהפיזור? לוחצים שוב ומקבלים סידור חדש</li>
+    <li>לוחצים הדפסה ומקבלים דף נקי עם הטבלה ורשימת המילים. אפשר גם להדפיס עותק עם הפתרון מסומן</li>
+  </ol>
+</section>
+
+<footer>
+  <span class="built">נבנה על ידי סוכן AI, בלילה, בזמן שגיא ישן.</span><br>
+  הקוד פתוח: <a href="https://github.com/gvago/overnight-tools">github.com/gvago/overnight-tools</a> · שום מידע לא נאסף
+</footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const MAX_WORDS = 30, MAX_LEN = 18, MAX_SIZE = 24;
+
+function parseWords(raw) {
+  const tokens = raw.split(/[\n,;]+/).map(t => t.trim()).filter(Boolean);
+  const words = [], bad = [];
+  for (const t of tokens) {
+    const clean = t.toUpperCase().replace(/[^A-Z]/g, '');
+    if (clean.length >= 2 && clean.length <= MAX_LEN && /^[A-Za-z ,'.-]+$/.test(t)) {
+      if (!words.includes(clean)) words.push(clean);
+    } else {
+      bad.push(t);
+    }
+  }
+  return { words, bad };
+}
+
+function buildDirs(diag, rev) {
+  const dirs = [[0, 1], [1, 0]];
+  if (diag) dirs.push([1, 1], [1, -1]);
+  if (rev) for (const [dr, dc] of [...dirs]) dirs.push([-dr, -dc]);
+  return dirs;
+}
+
+function tryBuild(words, size, dirs) {
+  const grid = Array.from({ length: size }, () => Array(size).fill(null));
+  const placements = [];
+  for (const word of words) {
+    let placed = false;
+    for (let attempt = 0; attempt < 600 && !placed; attempt++) {
+      const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+      const row = Math.floor(Math.random() * size);
+      const col = Math.floor(Math.random() * size);
+      const endR = row + dr * (word.length - 1), endC = col + dc * (word.length - 1);
+      if (endR < 0 || endR >= size || endC < 0 || endC >= size) continue;
+      let ok = true;
+      for (let i = 0; i < word.length; i++) {
+        const cell = grid[row + dr * i][col + dc * i];
+        if (cell !== null && cell !== word[i]) { ok = false; break; }
+      }
+      if (!ok) continue;
+      const cells = [];
+      for (let i = 0; i < word.length; i++) {
+        grid[row + dr * i][col + dc * i] = word[i];
+        cells.push([row + dr * i, col + dc * i]);
+      }
+      placements.push({ word, row, col, dr, dc, cells });
+      placed = true;
+    }
+    if (!placed) return null;
+  }
+  return { grid, placements };
+}
+
+function generate(words, diag, rev) {
+  const dirs = buildDirs(diag, rev);
+  const longest = Math.max(...words.map(w => w.length));
+  const letters = words.reduce((s, w) => s + w.length, 0);
+  let size = Math.max(longest, Math.ceil(Math.sqrt(letters * 2.2)), 8);
+  for (; size <= MAX_SIZE; size++) {
+    for (let round = 0; round < 25; round++) {
+      const result = tryBuild(words, size, dirs);
+      if (result) return { ...result, size };
+    }
+  }
+  return null;
+}
+
+const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function render(result, words) {
+  const { grid, placements, size } = result;
+  const keySet = new Set();
+  placements.forEach(p => p.cells.forEach(([r, c]) => keySet.add(r + ',' + c)));
+  const table = $('grid');
+  table.innerHTML = '';
+  for (let r = 0; r < size; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < size; c++) {
+      const td = document.createElement('td');
+      const letter = grid[r][c] || ABC[Math.floor(Math.random() * 26)];
+      td.textContent = letter;
+      if (keySet.has(r + ',' + c)) td.className = 'key';
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+  const bank = $('wordBank');
+  bank.innerHTML = '';
+  [...words].sort().forEach(w => {
+    const s = document.createElement('span');
+    s.textContent = w;
+    bank.appendChild(s);
+  });
+  $('sheetTitle').textContent = $('title').value.trim() || 'Word Search';
+  $('out').style.display = 'block';
+  // Expose full state for automated verification
+  window.__ws = {
+    size,
+    words: [...words],
+    placements: placements.map(p => ({ word: p.word, row: p.row, col: p.col, dr: p.dr, dc: p.dc })),
+    grid: [...table.rows].map(row => [...row.cells].map(td => td.textContent))
+  };
+}
+
+$('gen').addEventListener('click', () => {
+  const msg = $('msg');
+  msg.className = ''; msg.textContent = '';
+  const { words, bad } = parseWords($('words').value);
+  if (bad.length) {
+    msg.className = 'err';
+    msg.textContent = 'המילים האלה לא באנגלית או ארוכות מדי (עד ' + MAX_LEN + ' אותיות): ' + bad.slice(0, 5).join(', ') + (bad.length > 5 ? '…' : '') + '. הכלי עובד עם מילים באנגלית בלבד.';
+    return;
+  }
+  if (!words.length) {
+    msg.className = 'err';
+    msg.textContent = 'לא הוזנו מילים. כתבו לפחות מילה אחת באנגלית (2 אותיות ומעלה), מילה בכל שורה.';
+    return;
+  }
+  if (words.length > MAX_WORDS) {
+    msg.className = 'err';
+    msg.textContent = 'יותר מדי מילים (' + words.length + '). המקסימום הוא ' + MAX_WORDS + ' מילים לדף, כדי שהתפזורת תישאר פתירה.';
+    return;
+  }
+  const result = generate(words, $('diag').checked, $('rev').checked);
+  if (!result) {
+    msg.className = 'err';
+    msg.textContent = 'לא הצלחתי לסדר את כל המילים בטבלה. נסו פחות מילים או מילים קצרות יותר.';
+    return;
+  }
+  render(result, words);
+  msg.className = 'ok';
+  msg.textContent = '✓ נוצרה תפזורת ' + result.size + '×' + result.size + ' עם ' + words.length + ' מילים. לא מרוצים מהפיזור? לחצו שוב.';
+  $('out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+$('showKey').addEventListener('change', e => {
+  document.body.classList.toggle('show-key', e.target.checked);
+});
+
+$('printBtn').addEventListener('click', () => window.print());
+</script>
+</body>
+</html>
